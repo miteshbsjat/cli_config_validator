@@ -10,7 +10,18 @@ from typing import Any, Dict
 
 # Function to load configuration files
 def load_config(file_path: Path) -> dict:
-    """Load configuration file into a dictionary."""
+    """
+    Load configuration file into a dictionary.
+
+    Parameters:
+    - file_path (Path): The path to the configuration file.
+
+    Returns:
+    - dict: A dictionary containing the configuration data.
+
+    Raises:
+    - ValueError: If the file type is not supported.
+    """
     if file_path.suffix == '.yaml' or file_path.suffix == '.yml':
         with open(file_path, 'r') as f:
             return yaml.safe_load(f)
@@ -28,7 +39,17 @@ def load_config(file_path: Path) -> dict:
 
 # Function to merge multiple dictionaries
 def merge_configs(configs: Dict[str, Any]) -> dict:
-    """Merge multiple dictionaries into one."""
+    """
+    Merge multiple dictionaries into one.
+
+    Parameters:
+    configs (Dict[str, Any]): A dictionary where each key is a string representing a configuration name,
+                              and the value is another dictionary containing the configuration settings.
+
+    Returns:
+    dict: A single dictionary that contains all the configurations from the input dictionaries.
+          If there are overlapping keys, the values from later dictionaries will overwrite those from earlier ones.
+    """
     merged_config = {}
     for config in configs:
         merged_config.update(config)
@@ -36,7 +57,19 @@ def merge_configs(configs: Dict[str, Any]) -> dict:
 
 # Main validation function
 def validate_config(config_data: dict, model_class: BaseModel):
-    """Validate the configuration data against the provided Pydantic model class."""
+    """
+    Validate the configuration data against the provided Pydantic model class.
+
+    Parameters:
+    config_data (dict): A dictionary containing the configuration data to be validated.
+    model_class (BaseModel): The Pydantic model class that defines the expected structure of the configuration data.
+
+    Returns:
+    None
+
+    Raises:
+    ValidationError: If the configuration data does not match the expected structure defined by `model_class`.
+    """
     try:
         model_instance = model_class(**config_data)
         print(f"Validation successful: {model_instance}")
