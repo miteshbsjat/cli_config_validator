@@ -13,6 +13,9 @@ pyyaml = "5.4.1"
 toml = "0.10.2"
 
 
+[tool.poetry.group.dev.dependencies]
+build = "^1.2.2.post1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
