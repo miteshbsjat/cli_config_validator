@@ -1,4 +1,4 @@
 name: mitesh
 version: 0.0.2
-debug: False
+debug: true
 age: 14

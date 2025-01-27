@@ -77,6 +77,38 @@ def validate_config(config_data: dict, model_class: BaseModel):
         print("Validation failed with errors:")
         print(e.json())
 
+def load_model_class(model_file_path: Path, model_class_name: str):
+    try:
+        model_globals = {}
+        exec(model_file_path.read_text(), model_globals)
+        model_class = model_globals[model_class_name]
+        if not issubclass(model_class, BaseModel):
+            raise TypeError(f"{model_class_name} is not a subclass of Pydantic BaseModel.")
+        return model_class
+    except Exception as e:
+        print(f"Failed to load the model class: {e}")
+        return None
+
+def load_and_merge_configs(config_paths: list[Path]):
+    configs = []
+    for config_path in config_paths:
+        try:
+            print(f"Loading file: {config_path}")
+            config_data = load_config(config_path)
+            configs.append(config_data)
+        except Exception as e:
+            print(f"Error processing file {config_path}: {e}")
+            return None
+    merged_config = merge_configs(configs)
+    return merged_config
+
+def validate_merged_config(merged_config, model_class):
+    try:
+        model_class(**merged_config)
+        print("Validation successful.")
+    except ValidationError as e:
+        print(f"Validation failed: {e}")
+
 # CLI entry point
 def main():
     parser = argparse.ArgumentParser(description="Validate merged configuration files against a Pydantic model.")
@@ -86,38 +118,19 @@ def main():
 
     args = parser.parse_args()
 
-    # Dynamically load the model class from the provided Python file
-    model_file_path = args.model_file
-    model_class_name = args.class_model
-
-    try:
-        model_globals = {}
-        exec(model_file_path.read_text(), model_globals)
-        model_class = model_globals[model_class_name]
-        if not issubclass(model_class, BaseModel):
-            raise TypeError(f"{model_class_name} is not a subclass of Pydantic BaseModel.")
-    except Exception as e:
-        print(f"Failed to load the model class: {e}")
+    # Load the model class
+    model_class = load_model_class(args.model_file, args.class_model)
+    if not model_class:
         return
 
     # Load and merge all configuration files
-    configs = []
-    for config_path in args.variables:
-        try:
-            print(f"Loading file: {config_path}")
-            config_data = load_config(config_path)
-            configs.append(config_data)
-        except Exception as e:
-            print(f"Error processing file {config_path}: {e}")
-            return
-
-    merged_config = merge_configs(configs)
+    merged_config = load_and_merge_configs(args.variables)
+    if not merged_config:
+        return
 
     # Validate the merged configuration
-    print("Validating merged configuration...")
-    validate_config(merged_config, model_class)
+    validate_merged_config(merged_config, model_class)
 
 if __name__ == "__main__":
     # ./cli_config_validator.py -v config.yaml -v config2.yaml -m model.py -c ConfigModel
     main()
-
